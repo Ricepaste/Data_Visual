@@ -8,8 +8,8 @@ from LDA import LDA
 import neural_network
 
 DRAW = False
-rd.seed(11)
-np.random.seed(11)
+rd.seed(15)
+np.random.seed(15)
 
 
 def load_data():
@@ -64,12 +64,14 @@ def tnn(pca_train_data, pca_test_data, ans):
     # 歸一化
     minmax_train_data, minmax_test_data = min_max_(
         pca_train_data, pca_test_data)
+    minmax_train_data = minmax_train_data * 0.99 + 0.01
+    minmax_test_data = minmax_test_data * 0.99 + 0.01
 
     ans_onehot = np.zeros((ans.size, ans.max()))
     ans_onehot[np.arange(ans.size), (ans - 1).flatten()] = 1
 
     nn = neural_network.neuralNetwork(
-        inputnodes=65, hiddennodes=300, outputnodes=40, lr=0.0005)
+        inputnodes=65, hiddennodes=150, outputnodes=40, lr=0.001)
     RMSE, AC = nn.train(minmax_train_data, ans_onehot, epochs=300)
 
     plt.plot(RMSE, color='r', marker='o',

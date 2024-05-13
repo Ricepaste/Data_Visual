@@ -1,13 +1,12 @@
 import numpy as np
 
-# WEIGHTS_NORMALISE = False
 WEIGHTS_NORMALISE = True
 LOG_SIGMOID = True
 STEP_LR = True
 HIDDEN_OUTPUT_FULL_CONNECTIONS = True
 BIAS = True
 
-np.random.seed(1)
+np.random.seed(15)
 
 
 class neuralNetwork:
