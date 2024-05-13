@@ -1,4 +1,6 @@
 from neural_network import *
+import pandas as pd
+import matplotlib.pyplot as plt
 
 X = pd.read_csv('iris_in.csv', header=None)
 Y = pd.read_csv('iris_out.csv', header=None)

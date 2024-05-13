@@ -3,11 +3,11 @@ import numpy as np
 # WEIGHTS_NORMALISE = False
 WEIGHTS_NORMALISE = True
 LOG_SIGMOID = True
-STEP_LR = False
-HIDDEN_OUTPUT_FULL_CONNECTIONS = False
-BIAS = False
+STEP_LR = True
+HIDDEN_OUTPUT_FULL_CONNECTIONS = True
+BIAS = True
 
-# np.random.seed(10)
+np.random.seed(1)
 
 
 class neuralNetwork:
@@ -52,9 +52,17 @@ class neuralNetwork:
         return self.activation_function(x).T @ (1 - self.activation_function(x))
 
     def train(self, inputs, targets, epochs=100):
+        '''
+        訓練結束後會回傳2個list
+        第一個是每個epoch的cross entropy loss
+        第二個是每個epoch的正確率
+        '''
         CROSS_LOSS = []
         AC = []
         for epoch in range(epochs):
+            if epoch % (epochs // 10) == 9:
+                print(
+                    f'Epoch {epoch+1}/{epochs} -> {epoch/epochs * 100 // 10 * 10:.0f}%')
             if (epoch % 10 == 9 and STEP_LR):
                 self.lr *= 0.95
             ac = 0
@@ -120,8 +128,11 @@ class neuralNetwork:
             # print(np.argmax(np.array(targets[i], ndmin=2).T.flatten()))
             if (np.argmax(final_outputs.flatten()) == np.argmax(np.array(targets[i], ndmin=2).T.flatten())):
                 corrects += 1
-                print('AC!!!')
+            # else:
+            #     print(f'{np.argmax(final_outputs.flatten())}')
+            #     print(
+            #         f'{np.argmax(np.array(targets[i], ndmin=2).T.flatten())}')
         correct_percent = corrects / targets.shape[0] * 100.
-        print("Test Correct Percentage: {}%".format(correct_percent))
+        print("Neural Network Test Correct Percentage: {}%".format(correct_percent))
 
         return correct_percent

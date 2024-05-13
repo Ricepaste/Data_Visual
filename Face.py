@@ -1,13 +1,15 @@
-# viridis inferno rainbow
-
 import scipy.io as sio
 import matplotlib.pyplot as plt
 import numpy as np
+import random as rd
+
 from PCA import PCA
 from LDA import LDA
 import neural_network
 
-DRAW = True
+DRAW = False
+rd.seed(11)
+np.random.seed(11)
 
 
 def load_data():
@@ -21,7 +23,7 @@ def load_data():
 
 
 def pca(train_data, test_data):
-    pca = PCA(n_components=50)
+    pca = PCA(n_components=65)
     pca.fit(train_data)
     pca_train_data = pca.project(train_data).real
     pca_test_data = pca.project(test_data).real
@@ -38,58 +40,99 @@ def lda(pca_train_data, pca_test_data, ans):
     return X_projected, Y_projected
 
 
-def drawing(train_data, test_data, ans, pca_train_data, pca_test_data, X_projected, Y_projected):
-    print('shape of TrainData:', train_data.shape)
-    print('shape of PCA transformed TrainData:', pca_train_data.shape)
-    print('shape of LDA transformed TrainData:', X_projected.shape)
+def min_max_(pca_train_data, pca_test_data):
+    min = np.min(pca_train_data, axis=0)
+    max = np.max(pca_train_data, axis=0)
+    minmax_train_data = (pca_train_data - min) / (max - min)
+    minmax_test_data = (pca_test_data - min) / (max - min)
+    print(f'shape of min-maxed training Data: {minmax_train_data.shape}')
+    print(f'shape of min-maxed testing Data: {minmax_test_data.shape}')
 
-    x1 = X_projected[:, 0]
-    x2 = X_projected[:, 1]
-    x3 = X_projected[:, 2]
+    return minmax_train_data, minmax_test_data
 
-    plt.scatter(x1, x2,
-                c=ans, edgecolor='none', alpha=0.8,
-                cmap=plt.cm.get_cmap('rainbow', 200))
-    plt.xlabel('Principal Component 1')
-    plt.ylabel('Principal Component 2')
-    plt.colorbar()
+
+def tnn(pca_train_data, pca_test_data, ans):
+    # 進行隨機打亂
+    idx = list(range(ans.size))
+    rd.shuffle(idx)
+    idx = np.array(idx)
+
+    pca_train_data = pca_train_data[idx]
+    pca_test_data = pca_test_data[idx]
+    ans = ans[idx]
+
+    # 歸一化
+    minmax_train_data, minmax_test_data = min_max_(
+        pca_train_data, pca_test_data)
+
+    ans_onehot = np.zeros((ans.size, ans.max()))
+    ans_onehot[np.arange(ans.size), (ans - 1).flatten()] = 1
+
+    nn = neural_network.neuralNetwork(
+        inputnodes=65, hiddennodes=300, outputnodes=40, lr=0.0005)
+    RMSE, AC = nn.train(minmax_train_data, ans_onehot, epochs=300)
+
+    plt.plot(RMSE, color='r', marker='o',
+             linewidth=2, markersize=6)
+    plt.show()
+    plt.plot(AC, color='r', marker='o',
+             linewidth=2, markersize=6)
     plt.show()
 
+    nn.query(minmax_test_data, ans_onehot)
+
+
+def drawing(train_data, test_data, ans, pca_train_data, pca_test_data, X_projected, Y_projected):
     if (DRAW):
+        print('shape of TrainData:', train_data.shape)
+        print('shape of PCA transformed TrainData:', pca_train_data.shape)
+        print('shape of LDA transformed TrainData:', X_projected.shape)
+
+        x1 = X_projected[:, 0]
+        x2 = X_projected[:, 1]
+        x3 = X_projected[:, 2]
+
+        plt.scatter(x1, x2,
+                    c=ans, edgecolor='none', alpha=0.8,
+                    cmap=plt.cm.get_cmap('rainbow', 200))
+        plt.xlabel('Principal Component 1')
+        plt.ylabel('Principal Component 2')
+        plt.colorbar()
+        plt.show()
+
         fig = plt.figure()
-        ax = fig.gca(projection='3d')
+        ax = fig.add_subplot(projection='3d')
 
         ax.scatter(x1, x2, x3, c=ans, alpha=0.8,
                    cmap=plt.cm.get_cmap('rainbow', 200))
         ax.set_xlabel('Principal Component 1')
         ax.set_ylabel('Principal Component 2')
         ax.set_zlabel('Principal Component 3')
-        ax.legend()
         plt.show()
 
-    print('shape of TestData:', test_data.shape)
-    print('shape of PCA transformed TestData:', pca_test_data.shape)
-    print('shape of LDA transformed TestData:', Y_projected.shape)
+        print('shape of TestData:', test_data.shape)
+        print('shape of PCA transformed TestData:', pca_test_data.shape)
+        print('shape of LDA transformed TestData:', Y_projected.shape)
 
-    tx1 = Y_projected[:, 0]
-    tx2 = Y_projected[:, 1]
-    tx3 = Y_projected[:, 2]
+        tx1 = Y_projected[:, 0]
+        tx2 = Y_projected[:, 1]
+        tx3 = Y_projected[:, 2]
 
-    if (DRAW):
         fig = plt.figure()
-        ax = fig.gca(projection='3d')
+        ax = fig.add_subplot(projection='3d')
 
         ax.scatter(tx1, tx2, tx3, c=ans, alpha=0.8,
                    cmap=plt.cm.get_cmap('rainbow', 200))
         ax.set_xlabel('Principal Component 1')
         ax.set_ylabel('Principal Component 2')
         ax.set_zlabel('Principal Component 3')
-        ax.legend()
 
         plt.show()
+    else:
+        pass
 
 
-def ac_rate(X_projected, Y_projected):
+def ac_rate(X_projected, Y_projected, ans):
     mean = []
     for i in range(40):
         mean.append(np.mean(X_projected[i*5:i*5+5], axis=0))
@@ -127,6 +170,8 @@ def main():
     X_projected, Y_projected = lda(pca_train_data, pca_test_data, ans)
     drawing(train_data, test_data, ans, pca_train_data,
             pca_test_data, X_projected, Y_projected)
+    ac_rate(X_projected, Y_projected, ans)
+    tnn(pca_train_data, pca_test_data, ans)
 
 
 if __name__ == "__main__":
