@@ -17,7 +17,6 @@ def load_data():
     train_data = mat['ORLrawdataTrain']
     test_data = mat['ORLrawdataTest']
 
-    # 每五筆train_data的資料與五筆test_data的row串接
     array = []
     for i in range(200):
         array.append(train_data[i, :])
@@ -25,10 +24,6 @@ def load_data():
 
     array = np.array(array)
 
-    # # combine the train and test data
-    # train_data_combine = np.concatenate((train_data, test_data), axis=1)
-
-    # # 取奇數欄位作為訓練資料，偶數欄位作為測試資料
     train_data = array[1::2, :]
     print(train_data.shape)
     test_data = array[::2, :]
@@ -69,28 +64,15 @@ def min_max_(pca_train_data, pca_test_data):
     return minmax_train_data, minmax_test_data
 
 
-def tnn(pca_train_data: np.ndarray, pca_test_data: np.ndarray, ans: np.ndarray):
-
-    # 抽樣奇數編號的資料作為訓練資料，偶數編號的資料作為測試資料
-    pca_data = np.array(list(pca_train_data) + list(pca_test_data))
-    ans = np.array(list(ans) + list(ans))
-    pca_train_data = pca_data[range(1, len(pca_data), 2)]
-    pca_test_data = pca_data[range(0, len(pca_data), 2)]
-    ans_train_data = ans[range(1, len(ans), 2)]
-    ans_test_data = ans[range(0, len(ans), 2)]
-
+def tnn(pca_train_data, pca_test_data, ans):
     # 進行隨機打亂
-    idx = list(range(ans_train_data.size))
+    idx = list(range(ans.size))
     rd.shuffle(idx)
     idx = np.array(idx)
 
     pca_train_data = pca_train_data[idx]
     pca_test_data = pca_test_data[idx]
-    ans_train_data = ans_train_data[idx]
-    ans_test_data = ans_test_data[idx]
-
-    print(pca_train_data.shape, pca_test_data.shape,
-          ans_train_data.shape, ans_test_data.shape)
+    ans = ans[idx]
 
     # 歸一化
     minmax_train_data, minmax_test_data = min_max_(
@@ -98,13 +80,8 @@ def tnn(pca_train_data: np.ndarray, pca_test_data: np.ndarray, ans: np.ndarray):
     minmax_train_data = minmax_train_data * 0.99 + 0.01
     minmax_test_data = minmax_test_data * 0.99 + 0.01
 
-    # one-hot encoding
-    ans_train_onehot = np.zeros((ans_train_data.size, ans_train_data.max()))
-    ans_train_onehot[np.arange(ans_train_data.size),
-                     (ans_train_data - 1).flatten()] = 1
-    ans_test_onehot = np.zeros((ans_test_data.size, ans_test_data.max()))
-    ans_test_onehot[np.arange(ans_test_data.size),
-                    (ans_test_data - 1).flatten()] = 1
+    ans_onehot = np.zeros((ans.size, ans.max()))
+    ans_onehot[np.arange(ans.size), (ans - 1).flatten()] = 1
 
     nn = neural_network.neuralNetwork(
         inputnodes=65, hiddennodes=150, outputnodes=40, lr=0.001)
@@ -117,7 +94,7 @@ def tnn(pca_train_data: np.ndarray, pca_test_data: np.ndarray, ans: np.ndarray):
              linewidth=2, markersize=6)
     plt.show()
 
-    nn.query(minmax_test_data, ans_test_onehot)
+    nn.query(minmax_test_data, ans_onehot)
 
 
 def drawing(train_data, test_data, ans, pca_train_data, pca_test_data, X_projected, Y_projected):
