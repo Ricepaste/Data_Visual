@@ -4,7 +4,7 @@ WEIGHTS_NORMALISE = True
 LOG_SIGMOID = True
 STEP_LR = True
 HIDDEN_OUTPUT_FULL_CONNECTIONS = True
-BIAS = True
+BIAS = False
 
 np.random.seed(15)
 
