@@ -16,6 +16,19 @@ def load_data():
     mat = sio.loadmat('ORL_RawData.mat')
     train_data = mat['ORLrawdataTrain']
     test_data = mat['ORLrawdataTest']
+
+    array = []
+    for i in range(200):
+        array.append(train_data[i, :])
+        array.append(test_data[i, :])
+
+    array = np.array(array)
+
+    train_data = array[1::2, :]
+    print(train_data.shape)
+    test_data = array[::2, :]
+    print(test_data.shape)
+
     ans = np.arange(1, 41)
     ans = np.repeat(ans, 5)
 
