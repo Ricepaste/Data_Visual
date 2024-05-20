@@ -72,7 +72,7 @@ def tnn(pca_train_data, pca_test_data, ans):
 
     nn = neural_network.neuralNetwork(
         inputnodes=65, hiddennodes=150, outputnodes=40, lr=0.001)
-    RMSE, AC = nn.train(minmax_train_data, ans_onehot, epochs=300)
+    RMSE, AC = nn.train(minmax_train_data, ans_onehot, epochs=150)
 
     plt.plot(RMSE, color='r', marker='o',
              linewidth=2, markersize=6)
