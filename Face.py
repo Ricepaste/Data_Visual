@@ -17,6 +17,7 @@ def load_data():
     train_data = mat['ORLrawdataTrain']
     test_data = mat['ORLrawdataTest']
 
+    # 每五筆train_data的資料與五筆test_data的row串接
     array = []
     for i in range(200):
         array.append(train_data[i, :])
@@ -24,6 +25,10 @@ def load_data():
 
     array = np.array(array)
 
+    # # combine the train and test data
+    # train_data_combine = np.concatenate((train_data, test_data), axis=1)
+
+    # # 取奇數欄位作為訓練資料，偶數欄位作為測試資料
     train_data = array[1::2, :]
     print(train_data.shape)
     test_data = array[::2, :]
